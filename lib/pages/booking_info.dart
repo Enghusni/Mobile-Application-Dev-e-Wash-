@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class BookingInfoScreen extends StatefulWidget {
   @override
@@ -6,26 +8,43 @@ class BookingInfoScreen extends StatefulWidget {
 }
 
 class _BookingInfoScreenState extends State<BookingInfoScreen> {
-  List<Map<String, dynamic>> bookings = [
-    {
-      'bookingTime': '2024-07-01 10:00 AM',
-      'serviceType': 'Polishing',
-      'customerName': 'Warsan',
-      'status': 'Confirmed',
-    },
-    {
-      'bookingTime': '2024-07-05 02:00 PM',
-      'serviceType': 'Foaming',
-      'customerName': 'ALi',
-      'status': 'Pending',
-    },
-    {
-      'bookingTime': '2024-07-08 09:00 AM',
-      'serviceType': 'Foaming',
-      'customerName': 'Nuux',
-      'status': 'Pending',
-    },
-  ];
+  List<Map<String, dynamic>> bookings = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch data when the widget initializes
+    fetchDataFromMongoDB();
+  }
+
+  Future<void> fetchDataFromMongoDB() async {
+    // Replace with your backend API endpoint that fetches data from MongoDB
+    var url = Uri.parse('https://your-backend-api-endpoint.com/bookings');
+    
+    try {
+      var response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        // If the server returns a 200 OK response, parse the JSON
+        List<dynamic> data = jsonDecode(response.body);
+        
+        setState(() {
+          bookings = data.map((item) => {
+            'bookingTime': item['bookingTime'],
+            'serviceType': item['serviceType'],
+            'customerName': item['customerName'],
+            'status': item['status'],
+          }).toList();
+        });
+      } else {
+        // Handle other status codes as needed
+        print('Failed to load data: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle network errors or exceptions
+      print('Error fetching data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +54,7 @@ class _BookingInfoScreenState extends State<BookingInfoScreen> {
           'Your Booking Detail',
           style: TextStyle(color: Color(0xFF4713A3)),
         ),
-        iconTheme: IconThemeData(color: Color(0xFF4713A3) , size: 30,),
+        iconTheme: IconThemeData(color: Color(0xFF4713A3)),
       ),
       body: SingleChildScrollView(
         child: ConstrainedBox(

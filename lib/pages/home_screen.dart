@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             
   ListTile(
               leading: Icon(Icons.description , color: Color(0xFF4713A3),),
-              title: Text('Booking Now'),
+              title: Text('Book Now'),
               onTap: () {
                 Navigator.push(
                   context,

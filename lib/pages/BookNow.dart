@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart'; // Importing the intl package for date formatting
+import 'package:intl/intl.dart';
+
+class ServiceOption {
+  final String name;
+  final double amount;
+
+  ServiceOption(this.name, this.amount);
+}
 
 class BookNowScreen extends StatefulWidget {
   @override
@@ -8,41 +15,33 @@ class BookNowScreen extends StatefulWidget {
 }
 
 class _BookNowScreenState extends State<BookNowScreen> {
-  String customerName = "";
+  String customerId = "";
   String telephone = "";
-  String carDetail = "";
-  String carTargo = "";
-  bool option1 = false;
-  bool option2 = false;
-  bool option3 = false;
-  DateTime? selectedDate;
-  String? selectedCarType; // State variable for selected dropdown value
-  List<String> carTypes = ['Luxury Cars', 'Normal Cars', 'Trucks']; // Dropdown values
+  DateTime? selectedDateTime;
+  List<ServiceOption> selectedServices = [];
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  double additionalServicePrice = 0.0;
+  List<ServiceOption> serviceOptions = [
+    ServiceOption('Luxury Car Polishing , foaming', 30),
+    ServiceOption('Normal Car Polishing , foaming', 15),
+    ServiceOption('Truck Car Polishing , foaming', 46),
+    ServiceOption('OilChange', 8),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Booking Process',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 30),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: Color(0xFF4713A3), // Set app bar background color
+        backgroundColor: Color(0xFF4713A3),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -54,20 +53,18 @@ class _BookNowScreenState extends State<BookNowScreen> {
               children: [
                 SizedBox(height: 30),
                 buildInputField(
-                  hintText: 'Enter Your FullName',
+                  hintText: 'Enter Customer ID',
                   onChanged: (value) {
                     setState(() {
-                      customerName = value;
+                      customerId = value;
                     });
                   },
                 ),
                 SizedBox(height: 30),
                 buildInputField(
-                  hintText: 'Enter Your Telephone',
+                  hintText: 'Enter Telephone Number',
                   keyboardType: TextInputType.phone,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   onChanged: (value) {
                     setState(() {
                       telephone = value;
@@ -75,132 +72,45 @@ class _BookNowScreenState extends State<BookNowScreen> {
                   },
                 ),
                 SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Your Car Detail',
-                  onChanged: (value) {
-                    setState(() {
-                      carDetail = value;
-                    });
-                  },
-                  exampleText: 'for example: SURF CAR MODEL 2018',
-                ),
-                SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Your Car Number',
-                  onChanged: (value) {
-                    setState(() {
-                      carTargo = value;
-                    });
-                  },
-                  exampleText: 'for example: AH17684',
-                ),
+                buildServiceSelector(),
                 SizedBox(height: 30),
                 buildDateTimePicker(),
-                SizedBox(height: 30),
-                buildDropdownField(), // Adjusted padding for dropdown field
-                SizedBox(height: 30),
-                Container(
-                  width: screenWidth, // Match the width of the screen
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      width: 2,
-                      color: Color(0xFF4713A3),
-                    ),
-                  ),
-                  padding: EdgeInsets.all(20), // Padding adjusted to 20
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Select Additional Services:',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      SizedBox(height: 10),
-                      buildCheckBox(
-                        'Foaming',
-                        option1,
-                        (bool? value) {
-                          setState(() {
-                            option1 = value!;
-                            updateAdditionalServicePrice();
-                          });
-                        },
-                      ),
-                      buildCheckBox(
-                        'Oil Change',
-                        option2,
-                        (bool? value) {
-                          setState(() {
-                            option2 = value!;
-                            updateAdditionalServicePrice();
-                          });
-                        },
-                      ),
-                      buildCheckBox(
-                        'Polishing',
-                        option3,
-                        (bool? value) {
-                          setState(() {
-                            option3 = value!;
-                            updateAdditionalServicePrice();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
                 SizedBox(height: 40),
                 ElevatedButton(
-  onPressed: () {
-    if (_formKey.currentState!.validate()) {
-      if (customerName.isEmpty ||
-          telephone.isEmpty ||
-          carDetail.isEmpty ||
-          carTargo.isEmpty ||
-          selectedDate == null ||
-          selectedCarType == null ||
-          (!option1 && !option2 && !option3)) {
-        // If any input is empty or no additional service is selected, show error message
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Please fill in all the fields and select at least one additional service.'),
-          backgroundColor: Colors.red,
-        ));
-      } else {
-        // Calculate total price including additional services
-        double totalPrice = calculateTotalPrice();
-
-        // Navigate to confirmation screen with booking details
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ConfirmationScreen(
-              customerName: customerName,
-              telephone: telephone,
-              carDetail: carDetail,
-              carTargo: carTargo,
-              selectedDate: selectedDate!,
-              selectedCarType: selectedCarType!,
-              option1: option1,
-              option2: option2,
-              option3: option3,
-              totalPrice: totalPrice,
-            ),
-          ),
-        );
-      }
-    }
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Color(0xFF4713A3),
-    padding: EdgeInsets.all(16),
-  ),
-  child: Text(
-    'Check Out',
-    style: TextStyle(fontSize: 25, color: Colors.white),
-  ),
-),
-
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      if (customerId.isEmpty ||
+                          selectedServices.isEmpty ||
+                          telephone.isEmpty ||
+                          selectedDateTime == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Please fill in all the fields.'),
+                          backgroundColor: Colors.red,
+                        ));
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ConfirmationScreen(
+                              customerId: customerId,
+                              selectedServices: selectedServices,
+                              telephone: telephone,
+                              selectedDateTime: selectedDateTime!,
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF4713A3),
+                    padding: EdgeInsets.all(16),
+                  ),
+                  child: Text(
+                    'Check Out',
+                    style: TextStyle(fontSize: 25, color: Colors.white),
+                  ),
+                ),
               ],
             ),
           ),
@@ -214,44 +124,76 @@ class _BookNowScreenState extends State<BookNowScreen> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     required ValueChanged<String> onChanged,
-    String? exampleText,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              width: 2,
-              color: Color(0xFF4713A3),
-            ),
-          ),
-          child: TextFormField(
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: InputBorder.none,
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF4713A3)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-              hintStyle: TextStyle(fontSize: 20),
-            ),
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            onChanged: onChanged,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          width: 2,
+          color: Color(0xFF4713A3),
         ),
-        if (exampleText != null)
-          Padding(
-            padding: EdgeInsets.only(left: 10, top: 5),
-            child: Text(
-              exampleText,
-              style: TextStyle(color: Colors.grey),
-            ),
+      ),
+      child: TextFormField(
+        decoration: InputDecoration(
+          hintText: hintText,
+          border: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF4713A3)),
+            borderRadius: BorderRadius.circular(10),
           ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+        ),
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget buildServiceSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          width: 2,
+          color: Color(0xFF4713A3),
+        ),
+      ),
+      padding: EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Select Services :', style: TextStyle(fontSize: 20)),
+          SizedBox(height: 20),
+          ...serviceOptions.map((service) {
+            return buildCheckBox(
+              service.name,
+              selectedServices.contains(service),
+              (bool? value) {
+                setState(() {
+                  if (value!) {
+                    selectedServices.add(service);
+                  } else {
+                    selectedServices.remove(service);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget buildCheckBox(String title, bool isChecked, ValueChanged<bool?> onChanged) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: isChecked,
+          onChanged: onChanged,
+        ),
+        Text(title),
       ],
     );
   }
@@ -272,7 +214,7 @@ class _BookNowScreenState extends State<BookNowScreen> {
           ).then((pickedTime) {
             if (pickedTime == null) return;
             setState(() {
-              selectedDate = DateTime(
+              selectedDateTime = DateTime(
                 pickedDate.year,
                 pickedDate.month,
                 pickedDate.day,
@@ -284,20 +226,17 @@ class _BookNowScreenState extends State<BookNowScreen> {
         });
       },
       child: Container(
+        padding: EdgeInsets.all(15),
         decoration: BoxDecoration(
+          border: Border.all(color: Color(0xFF4713A3)),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            width: 2,
-            color: Color(0xFF4713A3),
-          ),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              selectedDate != null
-                  ? DateFormat.yMd().add_jm().format(selectedDate!)
+              selectedDateTime != null
+                  ? DateFormat.yMd().add_jm().format(selectedDateTime!)
                   : 'Select Date and Time',
               style: TextStyle(fontSize: 20),
             ),
@@ -307,430 +246,158 @@ class _BookNowScreenState extends State<BookNowScreen> {
       ),
     );
   }
-
-  Widget buildCheckBox(
-    String title,
-    bool value,
-    ValueChanged<bool?> onChanged,
-  ) {
-    return Row(
-      children: [
-        Checkbox(
-          value: value,
-          onChanged: onChanged,
-        ),
-        Text(
-          title,
-          style: TextStyle(fontSize: 16),
-        ),
-      ],
-    );
-  }
-
-  Widget buildDropdownField() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          width: 2,
-          color: Color(0xFF4713A3),
-        ),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Adjusted padding for dropdown
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 5),
-        ),
-        value: selectedCarType,
-        hint: Text('Select Car Type', style: TextStyle(fontSize: 20)),
-        onChanged: (newValue) {
-          setState(() {
-            selectedCarType = newValue!;
-            updateAdditionalServicePrice(); // Update price when car type changes
-          });
-        },
-        items: carTypes.map((type) {
-          return DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void updateAdditionalServicePrice() {
-    // Reset price
-    additionalServicePrice = 0.0;
-
-    // Calculate based on selected car type and options
-    if (selectedCarType == 'Luxury Cars') {
-      if (option1) {
-        additionalServicePrice += 10.0; // Foaming
-      }
-      if (option2) {
-        additionalServicePrice += 8.0; // Oil Change
-      }
-      if (option3) {
-        additionalServicePrice += 20.0; // Polishing
-      }
-    } else if (selectedCarType == 'Normal Cars') {
-      if (option1) {
-        additionalServicePrice += 5.0; // Foaming
-      }
-      if (option2) {
-        additionalServicePrice += 8.0; // Oil Change
-      }
-      if (option3) {
-        additionalServicePrice += 10.0; // Polishing
-      }
-    } else if (selectedCarType == 'Trucks') {
-      if (option1) {
-        additionalServicePrice += 16.0; // Foaming
-      }
-      if (option2) {
-        additionalServicePrice += 8.0; // Oil Change
-      }
-      if (option3) {
-        additionalServicePrice += 30.0; // Polishing
-      }
-    }
-
-    setState(() {
-      // Update UI with calculated price
-    });
-  }
-
-  double calculateTotalPrice() {
-    // Calculate total price including additional services
-    double totalPrice = 0.0;
-
-    // Base price calculation (if any)
-
-    // Add additional services price
-    totalPrice += additionalServicePrice;
-
-    return totalPrice;
-  }
 }
 
-class ConfirmationScreen extends StatefulWidget {
-  final String customerName;
+class ConfirmationScreen extends StatelessWidget {
+  final String customerId;
+  final List<ServiceOption> selectedServices;
   final String telephone;
-  final String carDetail;
-  final String carTargo;
-  final DateTime selectedDate;
-  final bool option1;
-  final bool option2;
-  final bool option3;
-  final String selectedCarType;
-  final double totalPrice;
+  final DateTime selectedDateTime;
 
   ConfirmationScreen({
-    required this.customerName,
+    required this.customerId,
+    required this.selectedServices,
     required this.telephone,
-    required this.carDetail,
-    required this.carTargo,
-    required this.selectedDate,
-    required this.option1,
-    required this.option2,
-    required this.option3,
-    required this.selectedCarType,
-    required this.totalPrice,
+    required this.selectedDateTime,
   });
 
-  @override
-  _ConfirmationScreenState createState() => _ConfirmationScreenState();
-}
-
-class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  int totalItems = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // Calculate initial total items based on selected options
-    if (widget.option1) totalItems++;
-    if (widget.option2) totalItems++;
-    if (widget.option3) totalItems++;
+  double getTotalPrice() {
+    return selectedServices.fold(0, (total, service) => total + service.amount);
   }
 
   @override
   Widget build(BuildContext context) {
+    final double totalPrice = getTotalPrice();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Confirmation',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontSize: 25),
         ),
         backgroundColor: Color(0xFF4713A3),
-        iconTheme: IconThemeData(color: Colors.white, size: 30),
+        iconTheme: IconThemeData(size: 25, color: Colors.white),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            Container(
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-              decoration: BoxDecoration(
-                color: Color(0xFF4713A3),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: Offset(0, 3),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                decoration: BoxDecoration(
+                  color: Color(0xFF4713A3),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Your Booking Details',
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Please review your booking details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 30),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Customer Name : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '${widget.customerName}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Telephone : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '${widget.telephone}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Car Detail : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '${widget.carDetail}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Car Targo : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '${widget.carTargo}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Date & Time : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text:
-                        '${DateFormat.yMd().add_jm().format(widget.selectedDate)}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Selected Car Type : ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '${widget.selectedCarType}',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 10),
-            Text(
-              'Additional Services :',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            if (widget.option1) ...[
-              Text('Foaming', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 10),
-            ],
-            if (widget.option2) ...[
-              Text('Oil Change', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 10),
-            ],
-            if (widget.option3) ...[
-              Text('Polishing', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 10),
-            ],
-            SizedBox(height: 20),
-            Divider(height: 2, thickness: 2, color: Colors.grey),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Items :',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Total Price :',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: Offset(0, 3),
                     ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Column(
                   children: [
                     Text(
-                      '${totalItems == 0 ? 'No items' : (totalItems == 1 ? '1 item' : '$totalItems items')}',
+                      'Your Booking Details',
                       style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
+                        fontSize: 24,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 10),
                     Text(
-                      '\$${widget.totalPrice.toStringAsFixed(2)}',
+                      'Please review your booking details',
                       style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Perform checkout action here
-                // For now, let's just go back to the previous screen
-                //Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF4713A3),
-                padding: EdgeInsets.all(16),
-                minimumSize: Size(double.infinity, 0),
               ),
-              child: Text(
-                'Pay Now',
-                style: TextStyle(
-                  fontSize: 25,
-                  color: Colors.white,
+              SizedBox(height: 30),
+              buildDetailRow('Customer ID ', customerId),
+              buildDetailRow('Telephone ', telephone),
+              buildDetailRow('Date and Time ', DateFormat.yMd().add_jm().format(selectedDateTime)),
+              SizedBox(height: 20),
+              Text('Selected Services :', style: TextStyle(fontSize: 20)),SizedBox(height: 10,),
+              ...selectedServices.map((service) => Text('${service.name}')).toList(),
+              SizedBox(height: 50),
+              Divider(height: 1, color: Color(0xFF4713A3)),
+              SizedBox(height: 50),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total Price:',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '\$${totalPrice.toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ],
+              ),
+              SizedBox(height: 50),
+              ElevatedButton(
+                onPressed: () {
+                  // Checkout action here
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF4713A3),
+                  padding: EdgeInsets.all(16),
+                  minimumSize: Size(double.infinity, 0),
+                ),
+                child: Text(
+                  'Pay Now',
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget buildDetailRow(String title, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Text(
+              '$title:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 20),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: BookNowScreen(),
-  ));
+  runApp(MaterialApp(home: BookNowScreen()));
 }

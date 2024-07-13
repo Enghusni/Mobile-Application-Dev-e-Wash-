@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-
-
 void main() {
   runApp(SettingsScreen());
 }
@@ -23,7 +21,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      
       theme: darkModeEnabled ? ThemeData.dark() : ThemeData.light(),
       home: Scaffold(
         appBar: AppBar(
@@ -32,7 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Settings',
             style: TextStyle(color: Colors.white, fontSize: 25),
           ),
-          //centerTitle: true, // Center the title
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back,
@@ -44,83 +40,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [SizedBox(height: 30,),
-              _buildSectionTitle('Notifications'),
-              _buildSwitchTile(
-                title: 'Receive Notifications',
-                value: receiveNotifications,
-                onChanged: (value) {
-                  setState(() {
-                    receiveNotifications = value;
-                    _toggleNotificationPreference(value);
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              _buildSectionTitle('Booking Preferences'),
-              _buildSwitchTile(
-                title: 'Auto Confirm Booking',
-                value: autoConfirmBooking,
-                onChanged: (value) {
-                  setState(() {
-                    autoConfirmBooking = value;
-                    _toggleAutoConfirmBooking(value);
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              _buildSectionTitle('Appearance'),
-              _buildSwitchTile(
-                title: 'Dark Mode',
-                value: darkModeEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    darkModeEnabled = value;
-                    _toggleDarkMode(value);
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              _buildSectionTitle('Data Sync'),
-              _buildSwitchTile(
-                title: 'Sync Data',
-                value: syncDataEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    syncDataEnabled = value;
-                    _toggleDataSync(value);
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              _buildSectionTitle('Feedback'),
-              _buildSwitchTile(
-                title: 'Provide Feedback',
-                value: feedbackEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    feedbackEnabled = value;
-                    _toggleFeedback(value);
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              _buildSectionTitle('Security'),
-              _buildSwitchTile(
-                title: 'Remember Credentials',
-                value: rememberCredentials,
-                onChanged: (value) {
-                  setState(() {
-                    rememberCredentials = value;
-                    _toggleRememberCredentials(value);
-                  });
-                },
-              ),
-            ],
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Notifications'),
+                        _buildSwitchTile(
+                          title: 'Receive Notifications',
+                          value: receiveNotifications,
+                          onChanged: (value) {
+                            setState(() {
+                              receiveNotifications = value;
+                              _toggleNotificationPreference(value);
+                            });
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        _buildSectionTitle('Booking Preferences'),
+                        _buildSwitchTile(
+                          title: 'Auto Confirm Booking',
+                          value: autoConfirmBooking,
+                          onChanged: (value) {
+                            setState(() {
+                              autoConfirmBooking = value;
+                              _toggleAutoConfirmBooking(value);
+                            });
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        _buildSectionTitle('Appearance'),
+                        _buildSwitchTile(
+                          title: 'Dark Mode',
+                          value: darkModeEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              darkModeEnabled = value;
+                              _toggleDarkMode(value);
+                            });
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        _buildSectionTitle('Data Sync'),
+                        _buildSwitchTile(
+                          title: 'Sync Data',
+                          value: syncDataEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              syncDataEnabled = value;
+                              _toggleDataSync(value);
+                            });
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        _buildSectionTitle('Feedback'),
+                        _buildSwitchTile(
+                          title: 'Provide Feedback',
+                          value: feedbackEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              feedbackEnabled = value;
+                              _toggleFeedback(value);
+                            });
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        _buildSectionTitle('Security'),
+                        _buildSwitchTile(
+                          title: 'Remember Credentials',
+                          value: rememberCredentials,
+                          onChanged: (value) {
+                            setState(() {
+                              rememberCredentials = value;
+                              _toggleRememberCredentials(value);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -152,9 +159,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
     );
   }
 

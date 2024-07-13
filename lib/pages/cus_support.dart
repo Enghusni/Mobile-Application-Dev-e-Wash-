@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';  // For JSON encoding
 
 class CustomerSupportScreen extends StatefulWidget {
   @override
@@ -8,9 +10,11 @@ class CustomerSupportScreen extends StatefulWidget {
 class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
   final _nameController = TextEditingController();
   final _numberController = TextEditingController();
+  final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   String _nameErrorText = '';
   String _numberErrorText = '';
+  String _subjectErrorText = '';
   String _messageErrorText = '';
   bool _isLoading = false;
 
@@ -20,6 +24,8 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
           _nameController.text.isEmpty ? 'Please enter your name' : '';
       _numberErrorText =
           _numberController.text.isEmpty ? 'Please enter your number' : '';
+      _subjectErrorText =
+          _subjectController.text.isEmpty ? 'Please enter your Subject' : '';
       _messageErrorText =
           _messageController.text.isEmpty ? 'Please enter your message' : '';
 
@@ -31,22 +37,41 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
         }
       }
 
-      // Check if all fields are valid
       if (_nameErrorText == '' &&
           _numberErrorText == '' &&
+          _subjectErrorText == '' &&
           _messageErrorText == '') {
-        // All inputs are valid, show loading indicator
-        _isLoading = true;
-
-        // Simulate a delay for 3 seconds
-        Future.delayed(Duration(seconds: 3), () {
-          setState(() {
-            _isLoading = false;
-            // Show confirmation dialog
-            _showConfirmationDialog();
-          });
-        });
+        _submitSupportRequest();
       }
+    });
+  }
+
+  Future<void> _submitSupportRequest() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await http.post(
+      Uri.parse('https://localhost:3000/api/customer-care'),  // Replace with your API endpoint
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'name': _nameController.text,
+        'number': _numberController.text,
+        'subject': _subjectController.text,
+        'message': _messageController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _showConfirmationDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit request. Please try again.')),
+      );
+    }
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -105,7 +130,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 20.0),
+            SizedBox(height: 15.0),
             Container(
               width: 120,
               height: 120,
@@ -144,7 +169,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 50),
+            SizedBox(height: 30),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -157,7 +182,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
               ),
               keyboardType: TextInputType.text,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             TextFormField(
               controller: _numberController,
               decoration: InputDecoration(
@@ -170,7 +195,20 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
+            TextFormField(
+              controller: _subjectController,
+              decoration: InputDecoration(
+                labelText: 'Enter Your Subject',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                  borderSide: BorderSide(color: Color(0xFF4713A3)),
+                ),
+                errorText: _subjectErrorText,
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            SizedBox(height: 10),
             TextFormField(
               controller: _messageController,
               decoration: InputDecoration(
@@ -189,7 +227,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading || _nameErrorText != '' || _numberErrorText != '' || _messageErrorText != ''
+                onPressed: _isLoading || _nameErrorText != '' || _numberErrorText != '' || _subjectErrorText != '' || _messageErrorText != ''
                     ? null
                     : _validateInputs,
                 child: Text(
@@ -219,6 +257,7 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
   void dispose() {
     _nameController.dispose();
     _numberController.dispose();
+    _subjectController.dispose();
     _messageController.dispose();
     super.dispose();
   }

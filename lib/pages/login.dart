@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:loginassegmnt/pages/SignUp.dart';
-import 'package:loginassegmnt/utility/buttonWidget.dart';
-import 'package:loginassegmnt/utility/imagewidget.dart';
-import 'package:loginassegmnt/utility/Mytextfield.dart';
-import 'package:loginassegmnt/utility/mytext.dart';
+import '../utility/buttonWidget.dart';
+import '../utility/imagewidget.dart';
+import '../utility/mytextfield.dart';
+import '../utility/mytext.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({Key? key}) : super(key: key);
@@ -16,36 +17,64 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   bool _showSplash = true;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    // Wait for 3 seconds before showing login screen
-    Timer(Duration(seconds: 3), () {
-      setState(() {
-        _showSplash = false;
-      });
+    _timer = Timer(Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
     });
   }
 
   void signIn() async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+    final url = Uri.parse('http://localhost:3000/api/customers'); // Adjust the URL for your API
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text,
+          'username': _usernameController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        Navigator.pushReplacementNamed(context, '/HomeScreen', arguments: data);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login successful! Welcome, ${data['username']}!')));
+      } else {
+        final errorMessage = jsonDecode(response.body)['message'] ?? 'Login failed.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _emailController.dispose();
+    _usernameController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _showSplash
-          ? SplashScreen() // Show SplashScreen if _showSplash is true
+          ? SplashScreen()
           : SafeArea(
               child: ListView(
                 children: [
-                  // Circular Image
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -64,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.only(top: 10, left: 25, right: 25),
                     child: Container(
                       width: double.infinity,
-                      height: 500,
+                      height: 400,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -76,28 +105,17 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           SizedBox(height: 30),
                           MyTextField(
-                            decoration: InputDecoration(
-                              hintText: 'Email ID',
-                              prefixIcon: Icon(Icons.alternate_email_outlined),
-                            ),
-                            myController: _emailController,
-                            hintText: 'Email address',
+                            hintText: 'Email Address',
                             prefixIcon: Icon(Icons.alternate_email_outlined),
+                            myController: _emailController,
+                            decoration: InputDecoration(hintText: 'Email Address'),
                           ),
                           SizedBox(height: 30),
                           MyTextField(
-                            decoration: InputDecoration(
-                              hintText: 'Password',
-                              prefixIcon: Icon(Icons.lock),
-                              suffixText: 'Forget?',
-                              suffixStyle: TextStyle(
-                                color: Color(0xFF4713A3),
-                                fontSize: 18,
-                              ),
-                            ),
-                            hintText: 'Password',
-                            prefixIcon: Icon(Icons.lock),
-                            myController: _passwordController,
+                            hintText: 'Username',
+                            prefixIcon: Icon(Icons.person),
+                            myController: _usernameController,
+                            decoration: InputDecoration(hintText: 'Username'),
                           ),
                           SizedBox(height: 30),
                           MyButton(
@@ -110,16 +128,14 @@ class _LoginPageState extends State<LoginPage> {
                             children: [
                               Text(
                                 'New User Please? ',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                ),
+                                style: TextStyle(fontSize: 20),
                               ),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: ((context) => SignUp()),
+                                      builder: (context) => SignUp(),
                                     ),
                                   );
                                 },
@@ -149,22 +165,19 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF4713A3), // Set background color to purple for splash screen
+      backgroundColor: Color(0xFF4713A3),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo here
             Image.asset(
               'images/Capture.PNG',
               height: 300,
             ),
-            SizedBox(
-              height: 20,
-            ),
+            SizedBox(height: 20),
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            )
+            ),
           ],
         ),
       ),

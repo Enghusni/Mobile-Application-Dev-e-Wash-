@@ -1,5 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:loginassegmnt/pages/login.dart';
 
 import '../utility/Mytextfield.dart';
@@ -8,56 +9,55 @@ import '../utility/imagewidget.dart';
 import '../utility/mytext.dart';
 
 class SignUp extends StatefulWidget {
-  SignUp({Key? key});
+  SignUp({Key? key}) : super(key: key);
 
   @override
   State<SignUp> createState() => _SignUpState();
 }
 
 class _SignUpState extends State<SignUp> {
-  final TextEditingController _username = TextEditingController();
+  final TextEditingController _yourname = TextEditingController();
   final TextEditingController _email = TextEditingController();
-  final TextEditingController _password = TextEditingController();
-  final TextEditingController _confirm = TextEditingController();
+  final TextEditingController _telephone = TextEditingController();
+
+  void signUp() async {
+    final url = Uri.parse('http://localhost:3000/api/customers'); // Adjust this URL
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': _yourname.text,
+          'email': _email.text,
+          'phone': _telephone.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      } else {
+        final errorMessage = jsonDecode(response.body)['message'] ?? 'Signup failed.';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _yourname.dispose();
+    _email.dispose();
+    _telephone.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    void showErr(msg) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return Center(
-            child: AlertDialog(
-              title: Text(msg),
-            ),
-          );
-        },
-      );
-    }
-
-    void singUp() async {
-      if (_password.text == _confirm.text) {
-        try {
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: _email.text,
-            password: _password.text,
-          );
-          // After creating the user, you can also update the user's profile to include the username
-          await FirebaseAuth.instance.currentUser!.updateDisplayName(_username.text);
-        } on FirebaseAuthException catch (e) {
-          if (e.code == 'weak-password') {
-            showErr('The password provided is too weak.');
-          } else if (e.code == 'email-already-in-use') {
-            showErr('The account already exists for that email.');
-          }
-        } catch (e) {
-          print(e);
-        }
-      } else {
-        showErr('Password mismatch');
-      }
-    }
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -79,46 +79,28 @@ class _SignUpState extends State<SignUp> {
                 ),
                 SizedBox(height: 20),
                 MyTextField(
-                  hintText: 'Username',
+                  hintText: 'Your Name',
                   prefixIcon: Icon(Icons.person),
-                  myController: _username,
-                  decoration: InputDecoration(
-                    hintText: 'Username',
-                    prefixIcon: Icon(Icons.person),
-                  ),
+                  myController: _yourname,
+                  decoration: InputDecoration(hintText: 'Your Name'),
                 ),
                 SizedBox(height: 20),
                 MyTextField(
-                  hintText: 'Email ID',
+                  hintText: 'Your Email Address',
                   prefixIcon: Icon(Icons.alternate_email_outlined),
                   myController: _email,
-                  decoration: InputDecoration(
-                    hintText: 'Email ID',
-                    prefixIcon: Icon(Icons.alternate_email_outlined),
-                  ),
+                  decoration: InputDecoration(hintText: 'Your Email Address'),
                 ),
                 SizedBox(height: 20),
                 MyTextField(
-                  myController: _password,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock_outline_rounded),
-                  ),
-                  hintText: 'Password',
-                  prefixIcon: Icon(Icons.lock_outline_rounded),
+                  hintText: 'Your Telephone Number',
+                  prefixIcon: Icon(Icons.phone),
+                  myController: _telephone,
+                  decoration: InputDecoration(hintText: 'Your Telephone Number'),
                 ),
                 SizedBox(height: 20),
-                MyTextField(
-                  hintText: 'Confirm password',
-                  prefixIcon: Icon(Icons.lock_clock_outlined),
-                  myController: _confirm,
-                  decoration: InputDecoration(
-                    hintText: 'Confirm password',
-                    prefixIcon: Icon(Icons.lock_clock_outlined),
-                  ),
-                ),
-                SizedBox(height: 30),
                 MyButton(
-                  onTap: singUp,
+                  onTap: signUp,
                   btnText: 'Sign Up',
                 ),
                 SizedBox(height: 20),
@@ -126,31 +108,27 @@ class _SignUpState extends State<SignUp> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'New User Please? ',
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
+                      'Already have an account? ',
+                      style: TextStyle(fontSize: 16),
                     ),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: ((context) => LoginPage()),
-                          ),
+                          MaterialPageRoute(builder: (context) => LoginPage()),
                         );
                       },
                       child: Text(
-                        'login',
+                        'Log In',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           color: Color(0xFF4713A3),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

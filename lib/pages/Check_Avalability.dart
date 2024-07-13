@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class CheckAvailabilityScreen extends StatefulWidget {
   @override
@@ -6,24 +8,53 @@ class CheckAvailabilityScreen extends StatefulWidget {
 }
 
 class _CheckAvailabilityScreenState extends State<CheckAvailabilityScreen> {
-  List<Map<String, dynamic>> availableTimes = [
-    {'dateTime': '2024-07-06 06:00 AM', 'available': true, 'serviceType': 'Foaming', 'duration': '1 hour'},
-    {'dateTime': '2024-07-06 07:00 AM', 'available': false, 'serviceType': 'Polishing', 'duration': '2 hours'},
-    {'dateTime': '2024-07-06 09:00 AM', 'available': true, 'serviceType': 'Oil Change', 'duration': '1.5 hours'},
-    {'dateTime': '2024-07-06 10:30 AM', 'available': true, 'serviceType': 'Foaming', 'duration': '1 hour'},
-    {'dateTime': '2024-07-07 11:30 AM', 'available': true, 'serviceType': 'Polishing', 'duration': '2 hours'},
-    {'dateTime': '2024-07-07 01:30 PM', 'available': false, 'serviceType': 'Oil Change', 'duration': '1.5 hours'},
-    {'dateTime': '2024-07-07 02:30 PM', 'available': true, 'serviceType': 'Foaming', 'duration': '1 hour'},
-    {'dateTime': '2024-07-08 03:30 PM', 'available': true, 'serviceType': 'Polishing', 'duration': '2 hours'},
-    {'dateTime': '2024-07-08 11:30 PM', 'available': true, 'serviceType': 'Foaming', 'duration': '1 hour'},
-  ];
+  List<Map<String, dynamic>> availableTimes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch availability data when the widget initializes
+    fetchDataFromMongoDB();
+  }
+
+  Future<void> fetchDataFromMongoDB() async {
+    // Replace with your backend API endpoint that fetches availability data from MongoDB
+    var url = Uri.parse('https://your-backend-api-endpoint.com/availableTimes');
+
+    try {
+      var response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        // If the server returns a 200 OK response, parse the JSON
+        List<dynamic> data = jsonDecode(response.body);
+
+        setState(() {
+          availableTimes = data.map((item) => {
+            'dateTime': item['dateTime'],
+            'available': item['available'],
+            'serviceType': item['serviceType'],
+            'duration': item['duration'],
+          }).toList();
+        });
+      } else {
+        // Handle other status codes as needed
+        print('Failed to load data: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Handle network errors or exceptions
+      print('Error fetching data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Check Availability' , style: TextStyle(color: Color(0xFF4713A3)),),
-        iconTheme: IconThemeData(color: Color(0xFF4713A3) , size: 30,),
+        title: Text(
+          'Check Availability',
+          style: TextStyle(color: Color(0xFF4713A3)),
+        ),
+        iconTheme: IconThemeData(color: Color(0xFF4713A3)),
       ),
       body: SingleChildScrollView(
         child: Column(

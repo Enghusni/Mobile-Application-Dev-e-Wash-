@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart'; // Importing the intl package for date formatting
 
+class ServiceOption {
+  final String name;
+  final double amount;
+
+  ServiceOption(this.name, this.amount);
+}
+
 class NormalFoamingBookingScreen extends StatefulWidget {
   @override
   _NormalFoamingBookingScreenState createState() =>
@@ -9,15 +16,16 @@ class NormalFoamingBookingScreen extends StatefulWidget {
 }
 
 class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen> {
-  String customerName = "";
+  String customerId = "";
   String telephone = "";
-  String carDetail = "";
-  String carTargo = "";
-  bool option1 = false;
-  bool option2 = false;
-  DateTime? selectedDate;
+  DateTime? selectedDateTime;
+  String? enteredService;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<ServiceOption> serviceOptions = [
+    ServiceOption('Foaming', 5),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -50,20 +58,36 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
               children: [
                 SizedBox(height: 30),
                 buildInputField(
-                  hintText: 'Enter Your FullName',
+                  hintText: 'Enter Customer ID',
+                  fontSize: 20,
                   onChanged: (value) {
                     setState(() {
-                      customerName = value;
+                      customerId = value;
                     });
                   },
                 ),
                 SizedBox(height: 30),
                 buildInputField(
-                  hintText: 'Enter Your Telephone',
+                  hintText: 'Enter Service Name',
+                  keyboardType: TextInputType.name,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+                  ],
+                  fontSize: 20,
+                  onChanged: (value) {
+                    setState(() {
+                      enteredService = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 30),
+                buildInputField(
+                  hintText: 'Enter Telephone Number',
                   keyboardType: TextInputType.phone,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
                   ],
+                  fontSize: 20,
                   onChanged: (value) {
                     setState(() {
                       telephone = value;
@@ -71,102 +95,29 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
                   },
                 ),
                 SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Your Car Detail',
-                  onChanged: (value) {
-                    setState(() {
-                      carDetail = value;
-                    });
-                  },
-                  exampleText: 'for example: SURF CAR MODEL 2018',
-                ),
-                SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Your Car Number',
-                  onChanged: (value) {
-                    setState(() {
-                      carTargo = value;
-                    });
-                  },
-                  exampleText: 'for example: AH17684',
-                ),
-                SizedBox(height: 30),
                 buildDateTimePicker(),
-                SizedBox(height: 30),
-                Center(
-                  child: Container(
-                    width: screenWidth * 0.8,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        width: 2,
-                        color: Color(0xFF4713A3),
-                      ),
-                    ),
-                    padding: EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Select Additional Services:',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            buildCheckBox(
-                              'Foaming',
-                              option1,
-                              (bool? value) {
-                                setState(() {
-                                  option1 = value!;
-                                });
-                              },
-                            ),
-                            SizedBox(width: 20),
-                            buildCheckBox(
-                              'Oil Change',
-                              option2,
-                              (bool? value) {
-                                setState(() {
-                                  option2 = value!;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
                 SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      if (customerName.isEmpty ||
+                      if (customerId.isEmpty ||
+                          enteredService == null ||
                           telephone.isEmpty ||
-                          carDetail.isEmpty ||
-                          carTargo.isEmpty ||
-                          selectedDate == null) {
-                        // If any input is empty, show error message
+                          selectedDateTime == null) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: Text('Please fill in all the fields.'),
                           backgroundColor: Colors.red,
                         ));
                       } else {
-                        // Navigate to confirmation screen with booking details
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ConfirmationScreen(
-                              customerName: customerName,
+                              customerId: customerId,
+                              serviceType: enteredService!,
                               telephone: telephone,
-                              carDetail: carDetail,
-                              carTargo: carTargo,
-                              selectedDate: selectedDate!,
-                              option1: option1,
-                              option2: option2,
+                              selectedDateTime: selectedDateTime!,
+                              serviceOptions: serviceOptions,
                             ),
                           ),
                         );
@@ -195,7 +146,7 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     required ValueChanged<String> onChanged,
-    String? exampleText,
+    double? fontSize,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -218,21 +169,13 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
               ),
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-              hintStyle: TextStyle(fontSize: 20),
+              hintStyle: TextStyle(fontSize: fontSize ?? 20),
             ),
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             onChanged: onChanged,
           ),
         ),
-        if (exampleText != null)
-          Padding(
-            padding: EdgeInsets.only(left: 10, top: 5),
-            child: Text(
-              exampleText,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
       ],
     );
   }
@@ -253,7 +196,7 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
           ).then((pickedTime) {
             if (pickedTime == null) return;
             setState(() {
-              selectedDate = DateTime(
+              selectedDateTime = DateTime(
                 pickedDate.year,
                 pickedDate.month,
                 pickedDate.day,
@@ -277,8 +220,8 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              selectedDate != null
-                  ? DateFormat.yMd().add_jm().format(selectedDate!)
+              selectedDateTime != null
+                  ? DateFormat.yMd().add_jm().format(selectedDateTime!)
                   : 'Select Date and Time',
               style: TextStyle(fontSize: 20),
             ),
@@ -288,97 +231,43 @@ class _NormalFoamingBookingScreenState extends State<NormalFoamingBookingScreen>
       ),
     );
   }
-
-  Widget buildCheckBox(
-    String title,
-    bool value,
-    ValueChanged<bool?> onChanged,
-  ) {
-    return Row(
-      children: [
-        Checkbox(
-          value: value,
-          onChanged: onChanged,
-        ),
-        Text(
-          title,
-          style: TextStyle(fontSize: 20),
-        ),
-      ],
-    );
-  }
 }
 
-class ConfirmationScreen extends StatefulWidget {
-  final String customerName;
+class ConfirmationScreen extends StatelessWidget {
+  final String customerId;
+  final String serviceType;
   final String telephone;
-  final String carDetail;
-  final String carTargo;
-  final DateTime selectedDate;
-  final bool option1;
-  final bool option2;
+  final DateTime selectedDateTime;
+  final List<ServiceOption> serviceOptions;
 
-  const ConfirmationScreen({
-    required this.customerName,
+  ConfirmationScreen({
+    required this.customerId,
+    required this.serviceType,
     required this.telephone,
-    required this.carDetail,
-    required this.carTargo,
-    required this.selectedDate,
-    required this.option1,
-    required this.option2,
+    required this.selectedDateTime,
+    required this.serviceOptions,
   });
 
-  @override
-  _ConfirmationScreenState createState() => _ConfirmationScreenState();
-}
-
-class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  bool isLoading = false;
-  bool orderCompleted = false;
+  double getTotalPrice() {
+    double total = 0;
+    for (var option in serviceOptions) {
+      total += option.amount;
+    }
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Calculating total items selected
-    int totalItems = (widget.option1 ? 1 : 0) + (widget.option2 ? 1 : 0);
-
-    // Calculating total price
-    double totalPrice = 0;
-    if (widget.option1) totalPrice += 5; // Price for foaming
-    if (widget.option2) totalPrice += 8; // Price for Oil Change
-
-    // Function to save booking details to Firestore
-    void saveBookingDetails() {
-      setState(() {
-        isLoading = true;
-      });
-
-      // Simulate a 2-second delay for demonstration purposes
-      Future.delayed(Duration(seconds: 2), () {
-        setState(() {
-          isLoading = false;
-          orderCompleted = true; // Set orderCompleted to true after successful completion
-        });
-
-        // Show snackbar for order completion
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Order completed!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      });
-    }
+    final double totalPrice = getTotalPrice();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Confirmation',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white , fontSize: 25),
         ),
         backgroundColor: Color(0xFF4713A3),
-        iconTheme: IconThemeData(
-          color: Colors.white,size: 30, // Change this color to white
-        ),
+        iconTheme: IconThemeData(size: 25 , color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -386,7 +275,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 20),
               Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
@@ -427,213 +315,47 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 ),
               ),
               SizedBox(height: 30),
-              Row(
-                children: [
-                  Text(
-                    'Customer Name :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${widget.customerName}',
-                    style: TextStyle(fontSize: 17),
-                  ),
-                ],
+              buildDetailRow('Customer ID', customerId),
+              buildDetailRow('Service Type', serviceType),
+              buildDetailRow('Telephone', telephone),
+              buildDetailRow(
+                'Date and Time',
+                DateFormat.yMd().add_jm().format(selectedDateTime),
               ),
-              SizedBox(height: 15),
+              SizedBox(height: 50),
+              Divider(height: 1, color: Color(0xFF4713A3)),
+              SizedBox(height: 50),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Telephone Number :',
+                    'Total Price :',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(width: 10),
                   Text(
-                    '${widget.telephone}',
+                    '\$${totalPrice.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 20),
                   ),
                 ],
               ),
-              SizedBox(height: 15),
-              Row(
-                children: [
-                  Text(
-                    'Car Detail :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${widget.carDetail}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 15),
-              Row(
-                children: [
-                  Text(
-                    'Car Targo :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${widget.carTargo}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 15),
-              Row(
-                children: [
-                  Text(
-                    'Date and Time :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${DateFormat.yMd().add_jm().format(widget.selectedDate)}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 15),
-              Row(
-                children: [
-                  Text(
-                    'Foaming :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${widget.option1 ? 'Yes' : 'No'}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 15),
-              Row(
-                children: [
-                  Text(
-                    'Oil Change :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    '${widget.option2 ? 'Yes' : 'No'}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 15),
-              Align(
-                alignment: Alignment.topRight,
-                child: ElevatedButton(
-                  onPressed: isLoading || orderCompleted
-                      ? null
-                      : () {
-                          // Call function to save booking details
-                          saveBookingDetails();
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF4713A3), // Set the background color to blue
-                    padding: EdgeInsets.all(16),
-                  ),
-                  child: Text(
-                    isLoading ? 'Processing...' : (orderCompleted ? 'Order Completed' : 'Complete Order'),
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ),
+              SizedBox(height: 50),
+              ElevatedButton(
+                onPressed: () {
+                  // Perform checkout action here
+                  // For now, let's just go back to the previous screen
+                  //Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF4713A3),
+                  padding: EdgeInsets.all(16),
+                  minimumSize: Size(double.infinity, 0), // Set button width to full width
                 ),
-              ),
-              SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Color(0xFF4713A3),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                child: Text(
+                  'Pay Now',
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.white,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Items :',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              'Total Price :',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            SizedBox(height: 20),
-                            Text(
-                              '${totalItems == 1 ? '1 item' : '$totalItems items'}',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              '\$${totalPrice.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Perform checkout action here
-                        // For now, let's just go back to the previous screen
-                        //Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: EdgeInsets.all(16),
-                        minimumSize:
-                            Size(double.infinity, 0), // Set button width to full width
-                      ),
-                      child: Text(
-                        'Pay Now',
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Color(0xFF4713A3),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
@@ -643,9 +365,36 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     );
   }
 
+  Widget buildDetailRow(String title, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Text(
+              '$title :',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 void main() {
   runApp(MaterialApp(
     home: NormalFoamingBookingScreen(),
   ));
-}
 }
