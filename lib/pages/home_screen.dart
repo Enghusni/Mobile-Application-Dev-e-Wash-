@@ -18,6 +18,7 @@ import 'BookNow.dart';
 import 'Check_Avalability.dart';
 import 'notifications.dart';
 import 'NotificationBadge.dart';
+import 'Rating_Reviews.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -144,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
                ListTile(
-              leading: Icon(Icons.event , color: Color(0xFF4713A3),),
+              leading: Icon(Icons.event_available , color: Color(0xFF4713A3),),
               title: Text('Check Availability'),
               onTap: () {
                 Navigator.push(
@@ -166,12 +167,15 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.notifications , color: Color(0xFF4713A3),),
-              title: Text('Notifications'),
+              leading: Icon(Icons.rate_review_rounded, color: Color(0xFF4713A3),),
+              title: Text('Rating and Review'),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => NotificationPage()),
+                  MaterialPageRoute(builder: (context) => ReviewPageScreen(
+                    userId: 'yourUserId',  // Replace with actual user ID
+                    serviceId: 'yourServiceId',  // Replace with actual service ID
+                  )),
                 );
               },
             ),
@@ -185,16 +189,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-          ListTile(
-              leading: Icon(Icons.settings , color: Color(0xFF4713A3),),
-              title: Text('Settings'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SettingsScreen()),
-                );
-              },
-            ),
+          // ListTile(
+          //     leading: Icon(Icons.settings , color: Color(0xFF4713A3),),
+          //     title: Text('Settings'),
+          //     onTap: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(builder: (context) => SettingsScreen()),
+          //       );
+          //     },
+          //   ),
             ListTile(
               title: Text('Logout'),
               leading: Icon(Icons.logout, color: Color(0xFF4713A3),),

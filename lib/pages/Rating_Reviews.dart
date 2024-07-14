@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';  // For JSON encoding
+import 'dart:convert';
 
 class ReviewPageScreen extends StatefulWidget {
   final String userId;
@@ -27,7 +27,7 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
           'serviceId': widget.serviceId,
           'rating': _rating,
           'comment': _comment,
-          'dateTime': DateTime.now().toIso8601String(),  // Add current dateTime
+          'dateTime': DateTime.now().toIso8601String(),
         }),
       );
 
@@ -36,10 +36,9 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
           SnackBar(content: Text('Review submitted!')),
         );
 
-        // Clear the fields
         _formKey.currentState!.reset();
         setState(() {
-          _rating = 1;  // Resetting rating to default
+          _rating = 1;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -54,23 +53,24 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
     final Size screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF4713A3),
-        title: Text('Submit Review' , style: TextStyle(color: Colors.white , fontSize: 25),
-        ),
-        iconTheme: IconThemeData(color: Colors.white , size: 30),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF4713A3),
+        title: Text('Submit Review', style: TextStyle(color: Colors.white, fontSize: screenSize.width * 0.065)),
+        iconTheme: IconThemeData(color: Colors.white, size: 30),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(screenSize.width * 0.05), // Responsive padding
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(screenSize.width * 0.05),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 10),
               Text(
                 'Rate the Service:',
                 style: TextStyle(fontSize: screenSize.width * 0.05),
               ),
-              Center(  // Centering the star rating icons
+              Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (index) {
@@ -78,11 +78,11 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
                       icon: Icon(
                         index < _rating ? Icons.star : Icons.star_border,
                         color: Color(0xFF4713A3),
-                        size: screenSize.width * 0.12,  // Responsive star size
+                        size: screenSize.width * 0.12,
                       ),
                       onPressed: () {
                         setState(() {
-                          _rating = index + 1.0;  // Set rating based on star index
+                          _rating = index + 1.0;
                         });
                       },
                     );
@@ -93,7 +93,7 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
                 'Rating: ${_rating.toStringAsFixed(1)}',
                 style: TextStyle(fontSize: screenSize.width * 0.04),
               ),
-              SizedBox(height: screenSize.height * 0.05), // Responsive spacing
+              SizedBox(height: screenSize.height * 0.05),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Comment Us On Here',
@@ -110,23 +110,18 @@ class _ReviewPageScreenState extends State<ReviewPageScreen> {
                   _comment = value;
                 },
               ),
-              SizedBox(height: screenSize.height * 0.03), // Responsive spacing
+              SizedBox(height: screenSize.height * 0.03),
               ElevatedButton(
-                onPressed: () {
-                  // Perform checkout action here
-                  // For now, let's just go back to the previous screen
-                  //Navigator.pop(context);
-                  
-                },
+                onPressed: _submitReview,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF4713A3),
-                  padding: EdgeInsets.all(16),
-                  minimumSize: Size(double.infinity, 0), // Set button width to full width
+                  padding: EdgeInsets.all(screenSize.height * 0.02),
+                  minimumSize: Size(double.infinity, 0),
                 ),
                 child: Text(
                   'Submit Review',
                   style: TextStyle(
-                    fontSize: 25,
+                    fontSize: screenSize.width * 0.06,
                     color: Colors.white,
                   ),
                 ),
