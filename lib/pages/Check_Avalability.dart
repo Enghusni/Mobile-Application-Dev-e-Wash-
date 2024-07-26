@@ -2,6 +2,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Availability Checker',
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+      ),
+      home: CheckAvailabilityScreen(),
+    );
+  }
+}
+
 class CheckAvailabilityScreen extends StatefulWidget {
   @override
   _CheckAvailabilityScreenState createState() => _CheckAvailabilityScreenState();
@@ -18,14 +35,12 @@ class _CheckAvailabilityScreenState extends State<CheckAvailabilityScreen> {
   }
 
   Future<void> fetchDataFromMongoDB() async {
-    // Replace with your backend API endpoint that fetches availability data from MongoDB
-    var url = Uri.parse('https://your-backend-api-endpoint.com/availableTimes');
+    var url = Uri.parse('http://192.168.43.170:5000/api/bookings');
 
     try {
       var response = await http.get(url);
 
       if (response.statusCode == 200) {
-        // If the server returns a 200 OK response, parse the JSON
         List<dynamic> data = jsonDecode(response.body);
 
         setState(() {
@@ -33,16 +48,15 @@ class _CheckAvailabilityScreenState extends State<CheckAvailabilityScreen> {
             'dateTime': item['dateTime'],
             'available': item['available'],
             'serviceType': item['serviceType'],
-            'duration': item['duration'],
           }).toList();
         });
       } else {
-        // Handle other status codes as needed
         print('Failed to load data: ${response.statusCode}');
+        // Handle other status codes as needed
       }
     } catch (e) {
-      // Handle network errors or exceptions
       print('Error fetching data: $e');
+      // Handle network errors or exceptions
     }
   }
 
@@ -78,16 +92,16 @@ class _CheckAvailabilityScreenState extends State<CheckAvailabilityScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              availableTimes[index]['available'] ? 'Available' : 'Not Available',
-                              style: TextStyle(
-                                color: availableTimes[index]['available'] ? Colors.green : Colors.red,
-                                fontSize: 14.0,
-                              ),
+                              'Service Type: ${availableTimes[index]['serviceType']}',
+                              style: TextStyle(fontSize: 14.0),
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'Service Type: ${availableTimes[index]['serviceType']}, Duration: ${availableTimes[index]['duration']}',
-                              style: TextStyle(fontSize: 12.0),
+                              availableTimes[index]['available'] ? 'Status: Available' : 'Status: Not Available',
+                              style: TextStyle(
+                                color: availableTimes[index]['available'] ? Colors.green : Colors.red,
+                                fontSize: 12.0,
+                              ),
                             ),
                           ],
                         ),

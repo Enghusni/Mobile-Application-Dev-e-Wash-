@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';  // For JSON encoding
+
 
 class CustomerSupportScreen extends StatefulWidget {
   @override
@@ -8,118 +7,50 @@ class CustomerSupportScreen extends StatefulWidget {
 }
 
 class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
-  final _nameController = TextEditingController();
-  final _numberController = TextEditingController();
   final _subjectController = TextEditingController();
+  final _numberController = TextEditingController();
   final _messageController = TextEditingController();
-  String _nameErrorText = '';
-  String _numberErrorText = '';
   String _subjectErrorText = '';
+  String _numberErrorText = '';
   String _messageErrorText = '';
-  bool _isLoading = false;
+
 
   void _validateInputs() {
-    setState(() {
-      _nameErrorText =
-          _nameController.text.isEmpty ? 'Please enter your name' : '';
-      _numberErrorText =
-          _numberController.text.isEmpty ? 'Please enter your number' : '';
-      _subjectErrorText =
-          _subjectController.text.isEmpty ? 'Please enter your Subject' : '';
-      _messageErrorText =
-          _messageController.text.isEmpty ? 'Please enter your message' : '';
-
-      if (_numberErrorText == '' && _numberController.text.isNotEmpty) {
-        try {
-          int.parse(_numberController.text);
-        } catch (e) {
-          _numberErrorText = 'Please enter a valid number';
-        }
+  setState(() {
+    _subjectErrorText = _subjectController.text.isEmpty ? 'Please enter your subject' : '';
+    _numberErrorText = _numberController.text.isEmpty ? 'Please enter your number' : '';
+    _messageErrorText = _messageController.text.isEmpty ? 'Please enter your message' : '';
+    
+    if (_numberErrorText == '' && _numberController.text.isNotEmpty) {
+      try {
+        int.parse(_numberController.text);
+      } catch (e) {
+        _numberErrorText = 'Please enter a valid number';
       }
-
-      if (_nameErrorText == '' &&
-          _numberErrorText == '' &&
-          _subjectErrorText == '' &&
-          _messageErrorText == '') {
-        _submitSupportRequest();
-      }
-    });
-  }
-
-  Future<void> _submitSupportRequest() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final response = await http.post(
-      Uri.parse('https://localhost:3000/api/customer-care'),  // Replace with your API endpoint
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': _nameController.text,
-        'number': _numberController.text,
-        'subject': _subjectController.text,
-        'message': _messageController.text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      _showConfirmationDialog();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit request. Please try again.')),
-      );
     }
 
-    setState(() {
-      _isLoading = false;
-    });
-  }
+    if (_subjectErrorText == '' && _numberErrorText == '' && _messageErrorText == '') {
+      // All inputs are valid, you can submit the data
+      String subject = _subjectController.text;
+      String number = _numberController.text;
+      String message = _messageController.text;
 
-  void _showConfirmationDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '🎉 Thank you for your patience. A member of our team will get back to you shortly. 🎉',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-                child: Text('OK', style: TextStyle(color: Colors.white, fontSize: 20)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF4713A3),
-                  minimumSize: Size(120, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+      // Here you can handle the submission of the data, e.g., sending it to a server
+      print('Subject: $subject');
+      print('Number: $number');
+      print('Message: $message');
+    }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF4713A3),
-        title: Text(
-          'Customer Support',
-          style: TextStyle(color: Colors.white),
-        ),
+      appBar: AppBar(backgroundColor: Color(0xFF4713A3),
+        title: Text('Customer Support', style: TextStyle(color: Colors.white),),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white, size: 30),
+          icon: Icon(Icons.arrow_back , color: Colors.white,),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -129,30 +60,30 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
         padding: EdgeInsets.all(25.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 15.0),
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 0.3,
-                    blurRadius: 0.1,
-                    offset: Offset(0, 0),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  'images/mylogin2.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+          children: [SizedBox(height: 20.0),
+        Container(
+  width: 120,
+  height: 120,
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(20), // Apply border radius to all corners
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.5),
+        spreadRadius: 0.3,
+        blurRadius: 0.1,
+        offset: Offset(0, 0), // changes position of shadow
+      ),
+    ],
+  ),
+  child: ClipRRect(
+    borderRadius: BorderRadius.circular(20), // Clip the child with the same border radius
+    child: Image.asset(
+      'images/mylogin2.png', // Change to your asset path
+      fit: BoxFit.cover,
+    ),
+  ),
+),
+
             SizedBox(height: 20.0),
             Text(
               'WELCOME BACK !',
@@ -169,20 +100,21 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 20.0),
             TextFormField(
-              controller: _nameController,
+              controller: _subjectController,
               decoration: InputDecoration(
-                labelText: 'Enter Your FullName',
+                labelText: 'Enter Your Subject',
+                focusColor: Color(0xFF4713A3),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                  borderSide: BorderSide(color: Color(0xFF4713A3)),
+                   borderRadius: BorderRadius.circular(15.0),
+                   borderSide: BorderSide(color: Color(0xFF4713A3)),
                 ),
-                errorText: _nameErrorText,
+                errorText: _subjectErrorText,
               ),
               keyboardType: TextInputType.text,
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 10.0),
             TextFormField(
               controller: _numberController,
               decoration: InputDecoration(
@@ -190,57 +122,36 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15.0),
                   borderSide: BorderSide(color: Color(0xFF4713A3)),
-                ),
+                ), 
                 errorText: _numberErrorText,
               ),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 10.0),
             TextFormField(
-              controller: _subjectController,
-              decoration: InputDecoration(
-                labelText: 'Enter Your Subject',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                  borderSide: BorderSide(color: Color(0xFF4713A3)),
-                ),
-                errorText: _subjectErrorText,
-              ),
-              keyboardType: TextInputType.text,
-            ),
-            SizedBox(height: 10),
-            TextFormField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                labelText: 'Your feedback helps us to serve you better',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                  borderSide: BorderSide(color: Color(0xFF4713A3)),
-                ),
-                errorText: _messageErrorText,
-              ),
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
-            ),
+  controller: _messageController,
+  decoration: InputDecoration(
+    labelText: 'Your feedback helps us to serve you better',
+    alignLabelWithHint: true,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(15.0),
+      borderSide: BorderSide(color: Color(0xFF4713A3)),
+    ),
+    errorText: _messageErrorText,
+  ),
+  keyboardType: TextInputType.multiline,
+  maxLines: 10, // Adjust this value as needed
+  minLines: 5,  // Ensures the field has a minimum height
+),
+
+
             SizedBox(height: 20.0),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading || _nameErrorText != '' || _numberErrorText != '' || _subjectErrorText != '' || _messageErrorText != ''
-                    ? null
-                    : _validateInputs,
-                child: Text(
-                  _isLoading ? 'Submitting...' : 'SUBMIT',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 20,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF4713A3),
-                  minimumSize: Size(double.infinity, 60),
+                onPressed: _validateInputs,
+                child: Text('SUBMIT' , style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white,fontSize: 20),),
+                style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF4713A3),minimumSize: Size(double.infinity, 60),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
@@ -255,9 +166,8 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _numberController.dispose();
     _subjectController.dispose();
+    _numberController.dispose();
     _messageController.dispose();
     super.dispose();
   }

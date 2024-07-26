@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart'; // Importing the intl package for date formatting
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:uuid/uuid.dart';
+
+void main() {
+  runApp(MaterialApp(
+    home: LuxuryOilChangeBookingScreen(),
+  ));
+}
 
 class ServiceOption {
   final String name;
@@ -16,37 +25,111 @@ class LuxuryOilChangeBookingScreen extends StatefulWidget {
 }
 
 class _LuxuryOilChangeBookingScreenState extends State<LuxuryOilChangeBookingScreen> {
-  String customerId = "";
-  String telephone = "";
+  List<ServiceOption> selectedServices = [];
   DateTime? selectedDateTime;
-  String? enteredService;
+  String customerId = ''; // Replace with actual customer ID
+  String telephone = ''; // Telephone number text field
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _telephoneController = TextEditingController();
 
   List<ServiceOption> serviceOptions = [
-    ServiceOption('OilChange', 8),
+    ServiceOption('Luxury Car OilChange', 8),
+    // Uncomment and adjust if needed
+    // ServiceOption('Normal Car Polishing, foaming', 15),
+    // ServiceOption('Truck Car Polishing, foaming', 46),
+    //ServiceOption('Foaming', 10),
   ];
+
+  String generateTransactionNumber() {
+    var uuid = Uuid();
+    return uuid.v4(); // Generate a version 4 (random) UUID
+  }
+
+  double getTotalPrice() {
+    return selectedServices.fold(0, (total, service) => total + service.amount);
+  }
+
+  Future<void> submitBooking() async {
+    if (_formKey.currentState!.validate()) {
+      if (selectedServices.isEmpty || selectedDateTime == null || _telephoneController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please select services, date & time, and enter your telephone number.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      String transactionNumber = generateTransactionNumber();
+      double totalAmount = getTotalPrice(); // Calculate total amount based on selected services
+
+      final url = Uri.parse('http://your-backend-url/api/bookings'); // Replace with your backend URL
+
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'customer': customerId, // Assuming customerId is used as user name
+            'services': selectedServices.map((service) => service.name).toList(),
+            'telephone': _telephoneController.text,
+            'dateTime': selectedDateTime!.toIso8601String(),
+            'tn': transactionNumber,
+            'amount': totalAmount,
+          }),
+        );
+
+        if (response.statusCode == 201) {
+          // Booking successful, handle navigation or feedback
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Booking successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Navigate to success screen or home screen
+        } else {
+          // Handle errors if booking fails
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Booking failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        // Handle network or server errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _telephoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Booking Process',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 30),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: Color(0xFF4713A3), // Set app bar background color
+        backgroundColor: Color(0xFF4713A3),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -57,73 +140,30 @@ class _LuxuryOilChangeBookingScreenState extends State<LuxuryOilChangeBookingScr
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Customer ID',
-                  fontSize: 20,
-                  onChanged: (value) {
-                    setState(() {
-                      customerId = value;
-                    });
-                  },
-                ),
-                SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Service Name',
-                  keyboardType: TextInputType.name,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
-                  ],
-                  fontSize: 20,
-                  onChanged: (value) {
-                    setState(() {
-                      enteredService = value;
-                    });
-                  },
-                ),
-                SizedBox(height: 30),
-                buildInputField(
-                  hintText: 'Enter Telephone Number',
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                  fontSize: 20,
-                  onChanged: (value) {
-                    setState(() {
-                      telephone = value;
-                    });
-                  },
-                ),
+                buildServiceSelector(),
                 SizedBox(height: 30),
                 buildDateTimePicker(),
+                SizedBox(height: 20), // Add spacing between date picker and telephone field
+                TextFormField(
+                  controller: _telephoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter Your Telephone Number',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Color(0xFF4713A3)),
+                    ),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your telephone number';
+                    }
+                    return null;
+                  },
+                ),
                 SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (customerId.isEmpty ||
-                          enteredService == null ||
-                          telephone.isEmpty ||
-                          selectedDateTime == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Please fill in all the fields.'),
-                          backgroundColor: Colors.red,
-                        ));
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ConfirmationScreen(
-                              customerId: customerId,
-                              serviceType: enteredService!,
-                              telephone: telephone,
-                              selectedDateTime: selectedDateTime!,
-                              serviceOptions: serviceOptions,
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
+                  onPressed: submitBooking,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF4713A3),
                     padding: EdgeInsets.all(16),
@@ -141,41 +181,50 @@ class _LuxuryOilChangeBookingScreenState extends State<LuxuryOilChangeBookingScr
     );
   }
 
-  Widget buildInputField({
-    required String hintText,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    required ValueChanged<String> onChanged,
-    double? fontSize,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              width: 2,
-              color: Color(0xFF4713A3),
-            ),
-          ),
-          child: TextFormField(
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: InputBorder.none,
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF4713A3)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-              hintStyle: TextStyle(fontSize: fontSize ?? 20),
-            ),
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            onChanged: onChanged,
-          ),
+  Widget buildServiceSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          width: 2,
+          color: Color(0xFF4713A3),
         ),
+      ),
+      padding: EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Select Services:', style: TextStyle(fontSize: 20)),
+          SizedBox(height: 20),
+          ...serviceOptions.map((service) {
+            return buildCheckBox(
+              service.name,
+              selectedServices.contains(service),
+              (bool? value) {
+                setState(() {
+                  if (value!) {
+                    selectedServices.add(service);
+                  } else {
+                    selectedServices.remove(service);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget buildCheckBox(String title, bool isChecked, ValueChanged<bool?> onChanged) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: isChecked,
+          onChanged: onChanged,
+        ),
+        Text(title),
       ],
     );
   }
@@ -208,14 +257,11 @@ class _LuxuryOilChangeBookingScreenState extends State<LuxuryOilChangeBookingScr
         });
       },
       child: Container(
+        padding: EdgeInsets.all(15),
         decoration: BoxDecoration(
+          border: Border.all(color: Color(0xFF4713A3)),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            width: 2,
-            color: Color(0xFF4713A3),
-          ),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -231,170 +277,4 @@ class _LuxuryOilChangeBookingScreenState extends State<LuxuryOilChangeBookingScr
       ),
     );
   }
-}
-
-class ConfirmationScreen extends StatelessWidget {
-  final String customerId;
-  final String serviceType;
-  final String telephone;
-  final DateTime selectedDateTime;
-  final List<ServiceOption> serviceOptions;
-
-  ConfirmationScreen({
-    required this.customerId,
-    required this.serviceType,
-    required this.telephone,
-    required this.selectedDateTime,
-    required this.serviceOptions,
-  });
-
-  double getTotalPrice() {
-    double total = 0;
-    for (var option in serviceOptions) {
-      total += option.amount;
-    }
-    return total;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final double totalPrice = getTotalPrice();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Confirmation',
-          style: TextStyle(color: Colors.white , fontSize: 25),
-        ),
-        backgroundColor: Color(0xFF4713A3),
-        iconTheme: IconThemeData(size: 25 , color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-                decoration: BoxDecoration(
-                  color: Color(0xFF4713A3),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Your Booking Details',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Please review your booking details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 30),
-              buildDetailRow('Customer ID', customerId),
-              buildDetailRow('Service Type', serviceType),
-              buildDetailRow('Telephone', telephone),
-              buildDetailRow(
-                'Date and Time',
-                DateFormat.yMd().add_jm().format(selectedDateTime),
-              ),
-              SizedBox(height: 50),
-              Divider(height: 1, color: Color(0xFF4713A3)),
-              SizedBox(height: 50),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total Price :',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '\$${totalPrice.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ],
-              ),
-              SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: () {
-                  // Perform checkout action here
-                  // For now, let's just go back to the previous screen
-                  //Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF4713A3),
-                  padding: EdgeInsets.all(16),
-                  minimumSize: Size(double.infinity, 0), // Set button width to full width
-                ),
-                child: Text(
-                  'Pay Now',
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildDetailRow(String title, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Text(
-              '$title :',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 20),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-void main() {
-  runApp(MaterialApp(
-    home: LuxuryOilChangeBookingScreen(),
-  ));
 }

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:loginassegmnt/pages/luxury_polishing.dart';
 import 'booking_info.dart';
-import 'settings_screen.dart';
+//import 'settings_screen.dart';
 import 'normal_polishing.dart';
 import 'Tracks_polishing.dart';
 import 'luxury_foaming.dart';
@@ -17,14 +17,18 @@ import 'cus_support.dart';
 import 'BookNow.dart';
 import 'Check_Avalability.dart';
 import 'notifications.dart';
-import 'NotificationBadge.dart';
+//import 'NotificationBadge.dart';
 import 'Rating_Reviews.dart';
+import 'login.dart';
+//import 'contact_us.dart';
+import 'settings_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   final String username;
   final String email;
 
-  HomeScreen({Key? key, required this.username, required this.email}) : super(key: key);
+  HomeScreen({required this.username, required this.email});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -64,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
-    int notificationCount = 3; // Replace with your actual notification count
+    //int notificationCount = 3; // Replace with your actual notification count
 
     return Scaffold(
       appBar: AppBar(
@@ -77,12 +81,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
        actions: [
-          NotificationBadge(
-            notificationCount: notificationCount,
-            onTap: () {
-              _showNotificationPage(context);
-            },
-          ),
+          Icon(Icons.more_vert_outlined),
+          
         ],
         iconTheme: IconThemeData(color: Color(0xFF4713A3), size: 30),
       ),
@@ -120,6 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+            ListTile(
+              leading: Icon(Icons.person , color: Color(0xFF4713A3),),
+              title: Text('Profile'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileScreen(username: widget.username, email: widget.email)),
+                );
+              },
+            ),
             
   ListTile(
               leading: Icon(Icons.description , color: Color(0xFF4713A3),),
@@ -135,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading: Icon(Icons.event , color: Color(0xFF4713A3),),
-              title: Text('YourBooking Info'),
+              title: Text('Booking Details'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -158,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
           
              ListTile(
               leading: Icon(Icons.support_agent , color: Color(0xFF4713A3),),
-              title: Text('Customer Support'),
+              title: Text('Customer Care'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -179,31 +189,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-        ListTile(
-              leading: Icon(Icons.person , color: Color(0xFF4713A3),),
-              title: Text('Profile'),
+        
+          ListTile(
+              leading: Icon(Icons.settings , color: Color(0xFF4713A3),),
+              title: Text('Settings'),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen(username: widget.username, email: widget.email)),
+                  MaterialPageRoute(builder: (context) => SettingsScreen()),
                 );
               },
             ),
-          // ListTile(
-          //     leading: Icon(Icons.settings , color: Color(0xFF4713A3),),
-          //     title: Text('Settings'),
-          //     onTap: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(builder: (context) => SettingsScreen()),
-          //       );
-          //     },
-          //   ),
             ListTile(
               title: Text('Logout'),
               leading: Icon(Icons.logout, color: Color(0xFF4713A3),),
               onTap: () {
-                _signOut(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
               },
             ),
           ],
@@ -242,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: Text(
-                                'Welcome! ${widget.username}',
+                                'Welcome, ${widget.username}!',
                                 style: TextStyle(
                                   fontSize: screenSize.width * 0.07,
                                   fontWeight: FontWeight.bold,
@@ -374,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 _buildItem(
                                   title: 'Luxury Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari raaxo',
                                   subtitle2: 'Available',
                                   price: '\$20.00',
                                   color: Color(0xFF4713A3),
@@ -384,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Normal Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari yer',
                                   subtitle2: 'Available',
                                   price: '\$10.00',
                                   color: Color(0xFF4713A3),
@@ -394,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Truck Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari Xamuul',
                                   subtitle2: 'Available',
                                   price: '\$30.00',
                                   color: Color(0xFF4713A3),
@@ -416,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 _buildItem(
                                   title: 'Luxury Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari raaxo',
                                   subtitle2: 'Available',
                                   price: '\$10.00',
                                   color: Color(0xFF4713A3),
@@ -426,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Normal Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari yer',
                                   subtitle2: 'Available',
                                   price: '\$5.00',
                                   color: Color(0xFF4713A3),
@@ -436,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Truck Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari xamuul',
                                   subtitle2: 'Available',
                                   price: '\$16.00',
                                   color: Color(0xFF4713A3),
@@ -458,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 _buildItem(
                                   title: 'Luxury Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari raaxo',
                                   subtitle2: 'Available',
                                   price: '\$8.00',
                                   color: Color(0xFF4713A3),
@@ -468,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Normal Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari yer',
                                   subtitle2: 'Available',
                                   price: '\$8.00',
                                   color: Color(0xFF4713A3),
@@ -478,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _buildItem(
                                   title: 'Truck Cars',
-                                  subtitle: 'Free Yr Car from Dirt',
+                                  subtitle: 'Gaari xamuul',
                                   subtitle2: 'Available',
                                   price: '\$8.00',
                                   color: Color(0xFF4713A3),

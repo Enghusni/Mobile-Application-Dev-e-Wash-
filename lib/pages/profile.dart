@@ -153,6 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF4713A3),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -181,6 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF4713A3),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -205,6 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: () {
                     if (_isEditing) {
                       print('Saving...');
+                      // Implement save logic here
                     }
                     _toggleEditing();
                   },
